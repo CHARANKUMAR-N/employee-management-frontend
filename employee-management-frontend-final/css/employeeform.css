@@ -1,0 +1,103 @@
+/* Profile Photo Container */
+.profile-photo-container {
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.profile-photo-wrapper {
+	position: relative;
+	width: 200px;
+	height: 200px;
+	border-radius: 50%;
+	overflow: hidden;
+	border: 3px solid #dee2e6;
+	margin: 0 auto;
+}
+
+.profile-photo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.profile-photo-actions {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Make sure the form controls have proper spacing */
+.form-control {
+	margin-bottom: 1rem;
+}
+
+/* Required field indicator */
+.required-field::after {
+	content: " *";
+	color: red;
+}
+
+/* Document upload styles */
+.document-preview {
+	max-width: 100%;
+	max-height: 200px;
+	margin-top: 0.5rem;
+}
+
+.document-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.document-actions .btn {
+	padding: 0.375rem 0.75rem;
+	font-size: 0.875rem;
+}
+
+.document-file-info {
+	font-size: 0.875rem;
+	color: #6c757d;
+	margin-top: 0.25rem;
+}
+
+/* Make document rows consistent with other dynamic rows */
+#documentContainer .dynamic-row {
+	padding: 1rem;
+	margin-bottom: 1rem;
+	border: 1px solid #dee2e6;
+	border-radius: 0.25rem;
+	background-color: #f8f9fa;
+}
+
+#documentContainer .dynamic-row .row {
+	align-items: flex-end;
+}
+
+/* Style the file input to match other form controls */
+.form-control-file {
+	display: block;
+	width: 100%;
+	padding: 0.375rem 0.75rem;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: #212529;
+	background-color: #fff;
+	background-clip: padding-box;
+	border: 1px solid #ced4da;
+	border-radius: 0.25rem;
+	transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control-file:focus {
+	border-color: #86b7fe;
+	outline: 0;
+	box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}

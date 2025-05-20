@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Management</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/index.css">
+
+<script
+	src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+<base href="/employee-management-frontend/" />
+</head>
+<body>
+	<div class="main-container">
+		<div class="header d-flex justify-content-between align-items-center">
+			<div>
+				<h4>
+					<i class="fas fa-users me-2"></i>Employee Management
+				</h4>
+			</div>
+			<div id="auth-controls">
+				<button id="login-button" class="btn btn-light">
+					<i class="fas fa-sign-in-alt me-1"></i> Login
+				</button>
+				<button id="logout-button" class="btn btn-light"
+					style="display: none">
+					<i class="fas fa-sign-out-alt me-1"></i> Logout
+				</button>
+			</div>
+		</div>
+
+		<div id="authenticated-content" style="display: none">
+			<div class="dashboard-card">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<div>
+						<h5>
+							Welcome, <span id="user-name" class="fw-semibold">User</span>
+						</h5>
+					</div>
+					<span id="role-badge" class="role-badge user-badge"> <i
+						class="fas fa-user me-1"></i> <span id="role-text">User</span>
+					</span>
+				</div>
+
+				<div class="d-flex gap-2">
+					<a href="employee-list.html" class="btn btn-primary"> <i
+						class="fas fa-list me-1"></i> View Employees
+					</a> <a id="add-employee-btn" href="employee-form.html"
+						class="btn btn-success" style="display: none"> <i
+						class="fas fa-user-plus me-1"></i> Add Employee
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="javascript/index.js"></script>
+
+</body>
+</html>
