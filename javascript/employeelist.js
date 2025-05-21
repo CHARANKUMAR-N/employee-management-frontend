@@ -1,4 +1,4 @@
-        const API_BASE_URL = 'http://10.100.124.64:8080/api';
+        const API_BASE_URL = 'https://employee-management-backend-h2w3.onrender.com/api';
         let auth0Client;
         let currentUserRoles = [];
         let isAdmin = false;
