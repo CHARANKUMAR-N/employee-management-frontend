@@ -5,7 +5,7 @@
         let documentCount = 0;
         let experienceCount = 0;
 
-       const API_BASE_URL = 'http://10.100.124.64:8080/api';
+       const API_BASE_URL = 'https://employee-management-backend-h2w3.onrender.com/api';
        
       //auth0Client: Will hold our authentication client instance
         let auth0Client; 
