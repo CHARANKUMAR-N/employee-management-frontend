@@ -126,18 +126,28 @@ const auth0Config = {
         }
     }
 
-    function updateRoleUI(user, isAdmin) {
-        const userName = user.name || user.email.split('@')[0];
-        document.getElementById('user-name').textContent = userName;
-        
-        const badge = document.getElementById('role-badge');
-        badge.innerHTML = isAdmin 
-            ? '<i class="fas fa-shield-alt me-1"></i><span id="role-text">Admin</span>'
-            : '<i class="fas fa-user me-1"></i><span id="role-text">User</span>';
-        badge.className = isAdmin ? 'role-badge admin-badge' : 'role-badge user-badge';
-        
-        document.getElementById('add-employee-btn').style.display = isAdmin ? 'block' : 'none';
+    ffunction updateRoleUI(user, isAdmin) {
+    const userName = user.name || user.email.split('@')[0];
+    document.getElementById('user-name').textContent = userName;
+
+    const badge = document.getElementById('role-badge');
+    badge.innerHTML = isAdmin 
+        ? '<i class="fas fa-shield-alt me-1"></i><span id="role-text">Admin</span>'
+        : '<i class="fas fa-user me-1"></i><span id="role-text">User</span>';
+    badge.className = isAdmin ? 'role-badge admin-badge' : 'role-badge user-badge';
+
+    // Show "Add Employee" button only for admins
+    document.getElementById('add-employee-btn').style.display = isAdmin ? 'block' : 'none';
+
+    // Show/hide "Reports" and "Settings" buttons based on role
+    const reportsBtn = document.querySelector('a[href*="logs"]');
+    const settingsBtn = document.querySelector('a[href*="applications"]');
+    if (reportsBtn && settingsBtn) {
+        reportsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        settingsBtn.style.display = isAdmin ? 'inline-block' : 'none';
     }
+}
+
 
     function updateUI(isAuthenticated) {
         document.getElementById('login-button').style.display = isAuthenticated ? 'none' : 'block';
