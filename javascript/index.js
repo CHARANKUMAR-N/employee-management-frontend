@@ -126,7 +126,7 @@ const auth0Config = {
         }
     }
 
-    ffunction updateRoleUI(user, isAdmin) {
+    function updateRoleUI(user, isAdmin) {
     const userName = user.name || user.email.split('@')[0];
     document.getElementById('user-name').textContent = userName;
 
