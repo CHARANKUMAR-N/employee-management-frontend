@@ -9,45 +9,28 @@
 	rel="stylesheet">
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/index.css">
 
 <script
 	src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
 <base href="/employee-management-frontend/" />
-<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
 	<div class="main-container">
-		<div class="header">
-			<div class="d-flex justify-content-between align-items-center header-content">
-				<div>
-					<h4>
-						<i class="fas fa-users me-2"></i>Employee Management
-					</h4>
-					<div id="welcome-message" class="welcome-message" style="display: none;"></div>
-				</div>
-				<div class="header-actions">
-					<div id="datetime-container" class="datetime-container" style="display: none;">
-						<i class="fas fa-clock"></i>
-						<span id="current-date"></span>
-						<span id="current-time"></span>
-					</div>
-					<div id="weather-widget" class="weather-widget" style="display: none;">
-						<i class="fas fa-cloud-sun"></i>
-						<span id="weather-temp">24°C</span>
-					</div>
-					<button id="theme-toggle" class="theme-toggle" title="Toggle theme">
-						<i class="fas fa-moon"></i>
-					</button>
-					<div class="auth-controls">
-						<button id="login-button" class="btn btn-light">
-							<i class="fas fa-sign-in-alt me-1"></i> Login
-						</button>
-						<button id="logout-button" class="btn btn-light"
-							style="display: none">
-							<i class="fas fa-sign-out-alt me-1"></i> Logout
-						</button>
-					</div>
-				</div>
+		<div class="header d-flex justify-content-between align-items-center">
+			<div>
+				<h4>
+					<i class="fas fa-users me-2"></i>Employee Management
+				</h4>
+			</div>
+			<div id="auth-controls">
+				<button id="login-button" class="btn btn-light">
+					<i class="fas fa-sign-in-alt me-1"></i> Login
+				</button>
+				<button id="logout-button" class="btn btn-light"
+					style="display: none">
+					<i class="fas fa-sign-out-alt me-1"></i> Logout
+				</button>
 			</div>
 		</div>
 
@@ -58,26 +41,18 @@
 						<h5>
 							Welcome, <span id="user-name" class="fw-semibold">User</span>
 						</h5>
-						<div id="personal-greeting" class="text-muted small"></div>
 					</div>
 					<span id="role-badge" class="role-badge user-badge"> <i
 						class="fas fa-user me-1"></i> <span id="role-text">User</span>
 					</span>
 				</div>
 
-				<div class="action-buttons">
+				<div class="d-flex gap-2">
 					<a href="employee-list.html" class="btn btn-primary"> <i
 						class="fas fa-list me-1"></i> View Employees
-					</a> 
-					<a id="add-employee-btn" href="employee-form.html"
+					</a> <a id="add-employee-btn" href="employee-form.html"
 						class="btn btn-success" style="display: none"> <i
 						class="fas fa-user-plus me-1"></i> Add Employee
-					</a>
-					<a href="#" class="btn btn-outline-secondary"> <i
-						class="fas fa-chart-bar me-1"></i> Reports
-					</a>
-					<a href="#" class="btn btn-outline-secondary"> <i
-						class="fas fa-cog me-1"></i> Settings
 					</a>
 				</div>
 			</div>
@@ -85,5 +60,6 @@
 	</div>
 
 	<script src="javascript/index.js"></script>
+
 </body>
 </html>
