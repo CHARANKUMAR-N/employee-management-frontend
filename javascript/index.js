@@ -2,7 +2,7 @@
         domain: "dev-mlvc4obj0xoj262o.us.auth0.com",
         clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND", 
         audience: "https://api.employeemanagement.com",
-        redirectUri: window.location.origin + "/employee-management-frontend/index.html",
+        redirectUri: window.location.origin,
         roleNamespace: "https://api.employeemanagement.com/roles"
     };
 
