@@ -1116,7 +1116,7 @@ function getEmployeeId() {
         	            logoutButton.addEventListener('click', () => {
         	                auth0Client.logout({
         	                    logoutParams: {
-        	                        returnTo: window.location.origin + "/employee-management-frontend/index.html"
+        	                        returnTo: window.location.origin + "/index.html"
         	                    }
         	                });
         	            });
