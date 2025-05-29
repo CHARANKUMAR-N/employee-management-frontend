@@ -5,7 +5,7 @@
         let documentCount = 0;
         let experienceCount = 0;
 
-       const API_BASE_URL = 'https://employee-management-backend-h2w3.onrender.com/api';
+       const API_BASE_URL = 'http://10.100.124.64:8080/api';
        
       //auth0Client: Will hold our authentication client instance
         let auth0Client; 
@@ -14,7 +14,7 @@
             domain: "dev-mlvc4obj0xoj262o.us.auth0.com",
             clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND",
             audience: "https://api.employeemanagement.com",
-            redirectUri: window.location.origin + "/index.html"
+            redirectUri: window.location.origin + "/employee-management-frontend/index.html"
         };
 
         async function createAuth0ClientInstance() {
@@ -232,6 +232,7 @@ function resetProfilePhotoPreview() {
             document.getElementById('permanentCity').value = employee.permanentCity || '';
             document.getElementById('permanentState').value = employee.permanentState || '';
             document.getElementById('permanentZip').value = employee.permanentZip || '';
+			document.getElementById('role').value = employee.role || '';
 
             // Education
             if (employee.educationList && employee.educationList.length > 0) {
@@ -494,6 +495,7 @@ function getEmployeeId() {
                 permanentCity: formData.get('permanentCity'),
                 permanentState: formData.get('permanentState'),
                 permanentZip: formData.get('permanentZip'),
+				role: formData.get('role'),
                 educationList: [],
                 certifications: [],
                 skills: [],
@@ -651,6 +653,11 @@ function getEmployeeId() {
                 'Mobile number must be 10 digits');
                 isValid = false;
             }
+			const role = document.getElementById('role').value;
+			    if (!role) {
+			        setErrorFor(document.getElementById('role').closest('.form-control'), 'Role is required');
+			        isValid = false;
+			    }
 
             // Validate dynamic fields
             const educationRows = document.querySelectorAll('#educationContainer .dynamic-row');
@@ -701,6 +708,8 @@ function getEmployeeId() {
 
             return isValid;
         }
+		
+		
 
         // Setup form validation
         function setupValidation() {
@@ -1106,6 +1115,10 @@ function getEmployeeId() {
         	            addSkill();
         	            // Don't add empty document by default - let user add as needed
         	        }
+					
+					// Show role field only for admin users
+					   
+
         	        
         	        // Setup form submission
         	        document.getElementById('employeeForm').addEventListener('submit', handleFormSubmit);
@@ -1116,7 +1129,7 @@ function getEmployeeId() {
         	            logoutButton.addEventListener('click', () => {
         	                auth0Client.logout({
         	                    logoutParams: {
-        	                        returnTo: window.location.origin + "/index.html"
+        	                        returnTo: window.location.origin + "/employee-management-frontend/index.html"
         	                    }
         	                });
         	            });
