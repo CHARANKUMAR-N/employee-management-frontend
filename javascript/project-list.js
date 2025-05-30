@@ -1,5 +1,4 @@
-
-        let projectModal;
+let projectModal;
         let projects = [];
         let seniorPms = [];
 
