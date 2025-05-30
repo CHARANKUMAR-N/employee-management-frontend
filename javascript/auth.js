@@ -6,7 +6,7 @@ const auth0Config = {
     clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND",
     audience: "https://api.employeemanagement.com",
     redirectUri: window.location.origin + "/index.html"
-
+};
 // Initialize Auth0 client
 async function initializeAuth0() {
     try {
