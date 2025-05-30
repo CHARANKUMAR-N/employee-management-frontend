@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team List</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+.card-header {
+	background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+	color: white;
+}
+
+.action-buttons .btn {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.875rem;
+}
+
+.loading-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: none;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+</style>
+</head>
+<body>
+	<div class="container mt-4">
+		<div id="messageContainer"></div>
+		<div class="card">
+			<div
+				class="card-header d-flex justify-content-between align-items-center">
+				<h3>
+					<i class="bi bi-people-fill"></i> Teams
+				</h3>
+				<div>
+					<button id="logout-button" class="btn btn-outline-light me-2">
+						<i class="bi bi-box-arrow-right"></i> Logout
+					</button>
+					<button id="add-team-btn" class="btn btn-light">
+						<i class="bi bi-plus"></i> Add Team
+					</button>
+				</div>
+			</div>
+			<div class="card-body">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>Project</th>
+							<th>PM</th>
+							<th>TM</th>
+							<th>Members</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody id="teamTableBody">
+						<!-- Will be populated by JavaScript -->
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- Loading Indicator -->
+	<div id="loadingView" class="loading-overlay">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+	</div>
+
+	<!-- Team Modal -->
+	<div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="teamModalTitle">Add Team</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="teamForm">
+						<input type="hidden" id="teamId">
+						<div class="mb-3">
+							<label for="teamName" class="form-label">Team Name</label> <input
+								type="text" class="form-control" id="teamName" required>
+						</div>
+						<div class="mb-3">
+							<label for="projectSelect" class="form-label">Project</label> <select
+								class="form-select" id="projectSelect" required>
+								<!-- Will be populated by JavaScript -->
+							</select>
+						</div>
+						<div class="mb-3">
+							<label for="pmSelect" class="form-label">Project Manager</label>
+							<select class="form-select" id="pmSelect">
+								<!-- Will be populated by JavaScript -->
+							</select>
+						</div>
+						<div class="mb-3">
+							<label for="tmSelect" class="form-label">Team Manager</label> <select
+								class="form-select" id="tmSelect">
+								<!-- Will be populated by JavaScript -->
+							</select>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="saveTeamBtn">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script
+		src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+
+	<script src="javascript/auth.js"></script>
+	<script>
+        let teamModal;
+        let teams = [];
+        let projects = [];
+        let projectManagers = [];
+        let teamManagers = [];
+
+
+        async function loadTeams() {
+            try {
+                showLoading(true);
+                const data = await makeRequest('/teams');
+                teams = Array.isArray(data) ? data : []; // Ensure it's an array
+                renderTeams();
+            } catch (error) {
+                console.error("Error loading teams:", error);
+                showMessage("Failed to load teams: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderTeams() {
+            const tbody = document.getElementById('teamTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = teams.map(team => `
+                <tr>
+                    <td>${team.id || ''}</td>
+                    <td>${team.name || ''}</td>
+                    <td>${team.projectName || 'Not assigned'}</td>
+                    <td>${team.projectManagerName || 'Not assigned'}</td>
+                    <td>${team.teamManagerName || 'Not assigned'}</td>
+                    <td>${team.members?.length || 0}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-outline-primary me-1" 
+                                onclick="editTeam(${team.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger me-1" 
+                                onclick="deleteTeam(${team.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" 
+                                onclick="viewTeamMembers(${team.id})">
+                            <i class="bi bi-people"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } 
+        
+        async function loadProjects() {
+            try {
+                showLoading(true);
+                const data = await makeRequest('/projects');
+                projects = data;
+                const select = document.getElementById('projectSelect');
+                select.innerHTML = '<option value="">Select Project</option>' + 
+                    data.map(proj => `
+                        <option value="${proj.id}">${proj.name}</option>
+                    `).join('');
+            } catch (error) {
+                console.error("Error loading projects:", error);
+                showMessage("Failed to load projects: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadProjectManagers() {
+            try {
+                showLoading(true);
+                const data = await makeRequest('/employees?role=PROJECT_MANAGER');
+                projectManagers = data;
+                const select = document.getElementById('pmSelect');
+                select.innerHTML = '<option value="">Select Project Manager</option>' + 
+                    data.map(emp => `
+                        <option value="${emp.employeeId}">
+                            ${emp.firstName} ${emp.lastName} (${emp.email})
+                        </option>
+                    `).join('');
+            } catch (error) {
+                console.error("Error loading project managers:", error);
+                showMessage("Failed to load project managers: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadTeamManagers() {
+            try {
+                showLoading(true);
+                const data = await makeRequest('/employees?role=TEAM_MANAGER');
+                teamManagers = data;
+                const select = document.getElementById('tmSelect');
+                select.innerHTML = '<option value="">Select Team Manager</option>' + 
+                    data.map(emp => `
+                        <option value="${emp.employeeId}">
+                            ${emp.firstName} ${emp.lastName} (${emp.email})
+                        </option>
+                    `).join('');
+            } catch (error) {
+                console.error("Error loading team managers:", error);
+                showMessage("Failed to load team managers: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function openTeamModal(team = null) {
+            const modalTitle = document.getElementById('teamModalTitle');
+            const form = document.getElementById('teamForm');
+            
+            if (team) {
+                modalTitle.textContent = 'Edit Team';
+                document.getElementById('teamId').value = team.id;
+                document.getElementById('teamName').value = team.name;
+                if (team.projectId) {
+                    document.getElementById('projectSelect').value = team.projectId;
+                }
+                if (team.projectManagerId) {
+                    document.getElementById('pmSelect').value = team.projectManagerId;
+                }
+                if (team.teamManagerId) {
+                    document.getElementById('tmSelect').value = team.teamManagerId;
+                }
+            } else {
+                modalTitle.textContent = 'Add Team';
+                form.reset();
+            }
+            
+            teamModal.show();
+        }
+
+        async function saveTeam() {
+            const teamId = document.getElementById('teamId').value;
+            const teamName = document.getElementById('teamName').value;
+            const projectId = document.getElementById('projectSelect').value;
+            const pmId = document.getElementById('pmSelect').value;
+            const tmId = document.getElementById('tmSelect').value;
+            
+            if (!teamName) {
+                showMessage("Team name is required", "error");
+                return;
+            }
+            
+            if (!projectId) {
+                showMessage("Project is required", "error");
+                return;
+            }
+            
+            const teamData = {
+                name: teamName,
+                projectId: projectId,
+                projectManagerId: pmId || null,
+                teamManagerId: tmId || null
+            };
+            
+            try {
+                showLoading(true);
+                let response;
+                if (teamId) {
+                    response = await makeRequest(`/teams/${teamId}`, 'PUT', teamData);
+                    showMessage("Team updated successfully", "success");
+                } else {
+                    response = await makeRequest('/teams', 'POST', teamData);
+                    showMessage("Team created successfully", "success");
+                }
+                
+                teamModal.hide();
+                await loadTeams(); // Reload the teams list
+            } catch (error) {
+                console.error("Error saving team:", error);
+                showMessage("Failed to save team: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function editTeam(id) {
+            const team = teams.find(t => t.id === id);
+            await loadProjects();
+            await loadProjectManagers();
+            await loadTeamManagers();
+            openTeamModal(team);
+        }
+
+        async function deleteTeam(id) {
+            if (!confirm("Are you sure you want to delete this team?")) return;
+            
+            try {
+                showLoading(true);
+                await makeRequest(`/teams/${id}`, 'DELETE');
+                showMessage("Team deleted successfully", "success");
+                await loadTeams();
+            } catch (error) {
+                console.error("Error deleting team:", error);
+                showMessage("Failed to delete team: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function viewTeamMembers(id) {
+            window.location.href = `team-details.html?id=${id}`;
+        }
+
+        async function initializePage() {
+            try {
+                // First initialize Auth0
+                await initializeAuth0();
+                const isAuthenticated = await checkAuth();
+                if (!isAuthenticated) return;
+                
+                // Check permissions
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user.roles.includes('admin') && !user.roles.includes('project_manager')) {
+                    showMessage("You don't have permission to access this page", "error");
+                    window.location.href = "profile.html";
+                    return;
+                }
+
+                // Initialize modal
+                teamModal = new bootstrap.Modal(document.getElementById('teamModal'));
+                
+                // Set up event listeners
+                document.getElementById('add-team-btn').addEventListener('click', async () => {
+                    await Promise.all([
+                        loadProjects(),
+                        loadProjectManagers(),
+                        loadTeamManagers()
+                    ]);
+                    openTeamModal();
+                });
+                
+                document.getElementById('saveTeamBtn').addEventListener('click', async () => {
+                    await saveTeam();
+                    await loadTeams(); // Ensure teams are reloaded after save
+                });
+                
+                document.getElementById('logout-button').addEventListener('click', () => {
+                    auth0Client.logout({
+                        logoutParams: {
+                            returnTo: window.location.origin + "/employee-management-frontend/index.html"
+                        }
+                    });
+                });
+                
+                // Initial load
+                await loadTeams();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showMessage("Initialization failed: " + error.message, "error");
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', initializePage);
+        window.editTeam = editTeam;
+        window.deleteTeam = deleteTeam;
+        window.viewTeamMembers = viewTeamMembers;
+    </script>
+</body>
+</html>
