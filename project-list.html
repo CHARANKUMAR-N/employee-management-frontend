@@ -243,23 +243,32 @@
         }
 
         async function initializePage() {
-            try {
-                await initializeAuth0();
-                const isAuthenticated = await checkAuth();
-                if (!isAuthenticated) return;
-                
-                if (!isAdmin() && !isSeniorProjectManager()) {
-                    showMessage("You don't have permission to access this page", "error");
-                    window.location.href = "index.html";
-                    return;
-                }
+    try {
+        await initializeAuth0();
+        const isAuthenticated = await checkAuth();
+        
+        if (!isAuthenticated) return;
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            throw new Error("User data not found");
+        }
 
-                projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
-                
-                document.getElementById('add-project-btn').addEventListener('click', async () => {
-                    await loadSeniorPms();
-                    openProjectModal();
-                });
+        // Check permissions - allow both admin and senior_project_manager
+        if (!user.roles.includes('admin') && !user.roles.includes('senior_project_manager')) {
+            showMessage("You don't have permission to access this page", "error");
+            // Redirect to their appropriate page instead of index.html
+            redirectBasedOnRole(user.roles);
+            return;
+        }
+
+        // Rest of your initialization code...
+        projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
+        
+        document.getElementById('add-project-btn').addEventListener('click', async () => {
+            await loadSeniorPms();
+            openProjectModal();
+        });
                 
                 document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
                 
