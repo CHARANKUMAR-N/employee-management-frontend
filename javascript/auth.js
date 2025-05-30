@@ -47,21 +47,27 @@ async function handleLogin(user) {
         roles: roles
     }));
 
-   if (window.location.pathname.endsWith('index.html') || 
+     if (window.location.pathname.endsWith('index.html') || 
         window.location.pathname === '/') {
-        // Redirect based on role with fallback
-        if (roles.includes('admin')) {
-            window.location.href = 'employee-list.html';
-        } else if (roles.includes('senior_project_manager')) {
-            window.location.href = 'project-list.html';
-        } else if (roles.includes('project_manager')) {
-            window.location.href = 'team-list.html';
-        } else if (roles.includes('team_manager')) {
-            window.location.href = 'team-details.html';
-        } else {
-            // Fallback to project-list if no specific role match
+        redirectBasedOnRole(roles);
+    }
+}
+
+// Add this new helper function
+function redirectBasedOnRole(roles) {
+    if (roles.includes('admin')) {
+        window.location.href = 'employee-list.html';
+    } else if (roles.includes('senior_project_manager')) {
+        // Don't redirect from project-list.html if already there
+        if (!window.location.pathname.endsWith('project-list.html')) {
             window.location.href = 'project-list.html';
         }
+    } else if (roles.includes('project_manager')) {
+        window.location.href = 'team-list.html';
+    } else if (roles.includes('team_manager')) {
+        window.location.href = 'team-details.html';
+    } else {
+        window.location.href = 'project-list.html'; // Default page
     }
 }
 
@@ -161,9 +167,11 @@ async function checkAuth() {
         
         const isAuthenticated = await auth0Client.isAuthenticated();
         if (!isAuthenticated) {
+            // Store the original path before redirecting to login
+            sessionStorage.setItem('originalPath', window.location.pathname);
             await auth0Client.loginWithRedirect({
                 authorizationParams: {
-                    redirect_uri: window.location.href
+                    redirect_uri: window.location.origin + window.location.pathname
                 }
             });
             return false;
