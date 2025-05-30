@@ -6,7 +6,6 @@ const auth0Config = {
     clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND",
     audience: "https://api.employeemanagement.com",
     redirectUri: window.location.origin + "/index.html"
-};
 
 // Initialize Auth0 client
 async function initializeAuth0() {
@@ -48,10 +47,9 @@ async function handleLogin(user) {
         roles: roles
     }));
 
-    // Only redirect if we're on the index page
-    if (window.location.pathname.endsWith('index.html') || 
-        window.location.pathname === '/employee-management-frontend/') {
-        // Redirect based on role
+   if (window.location.pathname.endsWith('index.html') || 
+        window.location.pathname === '/') {
+        // Redirect based on role with fallback
         if (roles.includes('admin')) {
             window.location.href = 'employee-list.html';
         } else if (roles.includes('senior_project_manager')) {
@@ -61,7 +59,8 @@ async function handleLogin(user) {
         } else if (roles.includes('team_manager')) {
             window.location.href = 'team-details.html';
         } else {
-            window.location.href = 'profile.html';
+            // Fallback to project-list if no specific role match
+            window.location.href = 'project-list.html';
         }
     }
 }
