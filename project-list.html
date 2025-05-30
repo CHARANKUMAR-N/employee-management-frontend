@@ -242,50 +242,78 @@
             }
         }
 
-        async function initializePage() {
+       async function initializePage() {
     try {
+        // Show loading indicator while initializing
+        showLoading(true);
+        
+        // Initialize Auth0 and check authentication
         await initializeAuth0();
         const isAuthenticated = await checkAuth();
         
-        if (!isAuthenticated) return;
+        if (!isAuthenticated) {
+            // Redirect to login if not authenticated
+            window.location.href = '/index.html';
+            return;
+        }
         
+        // Get user data from localStorage
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
-            throw new Error("User data not found");
+            // If no user data, try to get it from Auth0
+            try {
+                const auth0User = await auth0Client.getUser();
+                if (auth0User) {
+                    localStorage.setItem('user', JSON.stringify(auth0User));
+                    user = auth0User;
+                } else {
+                    throw new Error("User data not available");
+                }
+            } catch (authError) {
+                console.error("Error getting user from Auth0:", authError);
+                throw new Error("Failed to retrieve user information");
+            }
         }
 
         // Check permissions - allow both admin and senior_project_manager
-        if (!user.roles.includes('admin') && !user.roles.includes('senior_project_manager')) {
+        if (!user.roles || (!user.roles.includes('admin') && !user.roles.includes('senior_project_manager'))) {
             showMessage("You don't have permission to access this page", "error");
-            // Redirect to their appropriate page instead of index.html
-            redirectBasedOnRole(user.roles);
+            redirectBasedOnRole(user.roles || []);
             return;
         }
 
-        // Rest of your initialization code...
+        // Initialize modal and event listeners
         projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
         
         document.getElementById('add-project-btn').addEventListener('click', async () => {
             await loadSeniorPms();
             openProjectModal();
         });
-                
-                document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
-                
-                document.getElementById('logout-button').addEventListener('click', () => {
-                    auth0Client.logout({
-                        logoutParams: {
-                            returnTo: window.location.origin + "/index.html"
-                        }
-                    });
-                });
-                
-                await loadProjects();
-            } catch (error) {
-                console.error("Initialization error:", error);
-                showMessage("Initialization failed: " + error.message, "error");
-            }
+        
+        document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
+        
+        document.getElementById('logout-button').addEventListener('click', () => {
+            auth0Client.logout({
+                logoutParams: {
+                    returnTo: window.location.origin + "/index.html"
+                }
+            });
+        });
+        
+        // Load projects data
+        await loadProjects();
+    } catch (error) {
+        console.error("Initialization error:", error);
+        showMessage("Initialization failed: " + error.message, "error");
+        
+        // If there's an error with user data, redirect to login
+        if (error.message.includes("User data") || error.message.includes("user information")) {
+            window.location.href = '/index.html';
         }
+    } finally {
+        showLoading(false);
+    }
+}
 
         document.addEventListener('DOMContentLoaded', initializePage);
         window.editProject = editProject;
