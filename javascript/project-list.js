@@ -136,40 +136,88 @@ let projectModal;
         }
 
         async function initializePage() {
-            try {
-                await initializeAuth0();
-                const isAuthenticated = await checkAuth();
-                if (!isAuthenticated) return;
-                
-                if (!isAdmin() && !isSeniorProjectManager()) {
-                    showMessage("You don't have permission to access this page", "error");
-                    window.location.href = "profile.html";
-                    return;
-                }
-
-                projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
-                
-                document.getElementById('add-project-btn').addEventListener('click', async () => {
-                    await loadSeniorPms();
-                    openProjectModal();
-                });
-                
-                document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
-                
-                document.getElementById('logout-button').addEventListener('click', () => {
-                    auth0Client.logout({
-                        logoutParams: {
-                            returnTo: window.location.origin + "/index.html"
-                        }
-                    });
-                });
-                
-                await loadProjects();
-            } catch (error) {
-                console.error("Initialization error:", error);
-                showMessage("Initialization failed: " + error.message, "error");
-            }
+    try {
+        showLoading(true);
+        
+        // Initialize Auth0
+        await initializeAuth0();
+        
+        // Check authentication
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+            // If not authenticated, redirect to login
+            window.location.href = '/index.html';
+            return;
         }
+
+        // Get user data
+        let user = JSON.parse(localStorage.getItem('user'));
+        
+        // If user data not in localStorage, fetch from Auth0
+        if (!user) {
+            user = await auth0Client.getUser();
+            if (!user) {
+                throw new Error("Failed to retrieve user information");
+            }
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        // Ensure user has roles
+        if (!user.roles || user.roles.length === 0) {
+            throw new Error("User has no assigned roles");
+        }
+
+        // Check if user has required role
+        const hasRequiredRole = user.roles.includes('admin') || 
+                              user.roles.includes('senior_project_manager');
+        
+        if (!hasRequiredRole) {
+            // Redirect to appropriate page based on role
+            if (user.roles.includes('team_leader')) {
+                window.location.href = '/team-leader-dashboard.html';
+            } else if (user.roles.includes('project_manager')) {
+                window.location.href = '/project-manager-dashboard.html';
+            } else {
+                // Default redirect for other roles
+                window.location.href = '/profile.html';
+            }
+            return;
+        }
+
+        // Initialize page components if user has proper role
+        projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
+        
+        // Set up event listeners
+        document.getElementById('add-project-btn').addEventListener('click', async () => {
+            await loadSeniorPms();
+            openProjectModal();
+        });
+        
+        document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
+        
+        document.getElementById('logout-button').addEventListener('click', () => {
+            auth0Client.logout({
+                logoutParams: {
+                    returnTo: window.location.origin + "/index.html"
+                }
+            });
+        });
+        
+        // Load initial data
+        await loadProjects();
+        
+    } catch (error) {
+        console.error("Initialization error:", error);
+        showMessage("Error: " + error.message, "error");
+        
+        // If there's an error with authentication or roles, redirect to appropriate page
+        if (error.message.includes("User") || error.message.includes("role")) {
+            window.location.href = '/index.html';
+        }
+    } finally {
+        showLoading(false);
+    }
+}
 
         document.addEventListener('DOMContentLoaded', initializePage);
         window.editProject = editProject;
