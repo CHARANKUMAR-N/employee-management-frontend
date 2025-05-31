@@ -7,35 +7,32 @@ const auth0Config = {
     audience: "https://api.employeemanagement.com",
     redirectUri: window.location.origin + "/index.html"
 };
+
 // Initialize Auth0 client
 async function initializeAuth0() {
-    try {
-        // Check if auth0 is available
-        if (typeof auth0 === 'undefined') {
-            throw new Error("Auth0 SDK not loaded. Check the script import.");
+    auth0Client = await window.auth0.createAuth0Client({
+        domain: auth0Config.domain,
+        clientId: auth0Config.clientId,
+        authorizationParams: {
+            audience: auth0Config.audience,
+            redirect_uri: auth0Config.redirectUri,
+            scope: 'openid profile email read:employees write:employees'
         }
+    });
 
-        auth0Client = await auth0.createAuth0Client({
-            domain: auth0Config.domain,
-            clientId: auth0Config.clientId,
-            authorizationParams: {
-                audience: auth0Config.audience,
-                redirect_uri: auth0Config.redirectUri,
-                scope: 'openid profile email read:employees write:employees'
-            }
-        });
-
-        // Handle redirect from Auth0
-        if (window.location.search.includes('code=')) {
-            await auth0Client.handleRedirectCallback();
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        return auth0Client;
-    } catch (error) {
-        console.error("Auth0 initialization error:", error);
-        throw error;
+    // Handle redirect from Auth0
+    if (window.location.search.includes('code=')) {
+        await auth0Client.handleRedirectCallback();
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
+
+    const isAuthenticated = await auth0Client.isAuthenticated();
+    if (isAuthenticated) {
+        const user = await auth0Client.getUser();
+        await handleLogin(user);
+    }
+
+    return auth0Client;
 }
 
 // Handle login and store user info
@@ -47,27 +44,21 @@ async function handleLogin(user) {
         roles: roles
     }));
 
-     if (window.location.pathname.endsWith('index.html') || 
-        window.location.pathname === '/') {
-        redirectBasedOnRole(roles);
-    }
-}
-
-// Add this new helper function
-function redirectBasedOnRole(roles) {
-    if (roles.includes('admin')) {
-        window.location.href = 'employee-list.html';
-    } else if (roles.includes('senior_project_manager')) {
-        // Don't redirect from project-list.html if already there
-        if (!window.location.pathname.endsWith('project-list.html')) {
+    // Only redirect if we're on the index page
+    if (window.location.pathname.endsWith('index.html') || 
+        window.location.pathname === '/employee-management-frontend/') {
+        // Redirect based on role
+        if (roles.includes('admin')) {
+            window.location.href = 'employee-list.html';
+        } else if (roles.includes('senior_project_manager')) {
             window.location.href = 'project-list.html';
+        } else if (roles.includes('project_manager')) {
+            window.location.href = 'team-list.html';
+        } else if (roles.includes('team_manager')) {
+            window.location.href = 'team-details.html';
+        } else {
+            window.location.href = 'profile.html';
         }
-    } else if (roles.includes('project_manager')) {
-        window.location.href = 'team-list.html';
-    } else if (roles.includes('team_manager')) {
-        window.location.href = 'team-details.html';
-    } else {
-        window.location.href = 'project-list.html'; // Default page
     }
 }
 
@@ -160,27 +151,16 @@ function showLoading(show) {
 
 // Check authentication and redirect if not logged in
 async function checkAuth() {
-    try {
-        if (!auth0Client) {
-            await initializeAuth0();
-        }
-        
-        const isAuthenticated = await auth0Client.isAuthenticated();
-        if (!isAuthenticated) {
-            // Store the original path before redirecting to login
-            sessionStorage.setItem('originalPath', window.location.pathname);
-            await auth0Client.loginWithRedirect({
-                authorizationParams: {
-                    redirect_uri: window.location.origin + window.location.pathname
-                }
-            });
-            return false;
-        }
-        return true;
-    } catch (error) {
-        console.error("Authentication check failed:", error);
-        throw error;
+    const isAuthenticated = await auth0Client.isAuthenticated();
+    if (!isAuthenticated) {
+        await auth0Client.loginWithRedirect({
+            authorizationParams: {
+                redirect_uri: window.location.href
+            }
+        });
+        return false;
     }
+    return true;
 }
 
 // Logout
