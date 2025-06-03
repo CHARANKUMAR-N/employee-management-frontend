@@ -247,15 +247,16 @@
 
         async function initializePage() {
             try {
-                // First initialize Auth0
-                if (typeof auth0Client === 'undefined') {
-                    await initializeAuth0();
+                // First initialize Auth0 - make sure to await this
+                if (typeof auth0Client === 'undefined' || auth0Client === null) {
+                    auth0Client = await initializeAuth0();
                 }
                 
+                // Now we can safely check auth
                 const isAuthenticated = await checkAuth();
                 if (!isAuthenticated) return;
                 
-                // Check permissions
+                // Rest of your initialization code...
                 const user = JSON.parse(localStorage.getItem('user'));
                 if (!user.roles.includes('admin') && !user.roles.includes('team_manager')) {
                     showMessage("You don't have permission to access this page", "error");
