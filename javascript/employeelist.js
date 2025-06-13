@@ -185,7 +185,7 @@
             populateEmployeeTable(sortedEmployees);
         }
 
-       function populateEmployeeTable(employees) {
+        function populateEmployeeTable(employees) {
             const tableBody = document.getElementById('employeeTableBody');
             if (!employees || employees.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No employees found</td></tr>`;
@@ -245,7 +245,7 @@
 
             // Load photos after table is populated
             loadProfilePhotos(employees);
-        }}
+        }
 
         async function loadProfilePhotos(employees) {
             try {
