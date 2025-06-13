@@ -200,7 +200,7 @@
 	<script
 		src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
 	<script>
-        const API_BASE_URL = 'http://10.100.124.64:8080/api';
+        const API_BASE_URL = 'https://employee-management-backend-h2w3.onrender.com/api';
         let auth0Client;
         let messageModal;
         
@@ -208,7 +208,7 @@
             domain: "dev-mlvc4obj0xoj262o.us.auth0.com",
             clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND",
             audience: "https://api.employeemanagement.com",
-            redirectUri: window.location.origin + "/employee-management-frontend/index.html"
+            redirectUri: window.location.origin + "/index.html"
         };
         
         async function initializeAuth0() {
