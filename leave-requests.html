@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leave Requests</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+.leave-requests-container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 20px;
+}
+
+.leave-header {
+	background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+	color: white;
+	padding: 15px;
+	border-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.filter-controls {
+	margin-bottom: 20px;
+	padding: 15px;
+	background-color: #f8f9fa;
+	border-radius: 8px;
+}
+
+.leave-card {
+	border-radius: 8px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+	overflow: hidden;
+}
+
+.leave-card-header {
+	background-color: #f8f9fa;
+	padding: 15px;
+	border-bottom: 1px solid #dee2e6;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.leave-card-body {
+	padding: 15px;
+}
+
+.employee-info {
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.employee-photo {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-right: 10px;
+}
+
+.leave-dates {
+	font-size: 0.9rem;
+	color: #6c757d;
+	margin-bottom: 10px;
+}
+
+.leave-reason {
+	margin-bottom: 10px;
+}
+
+.leave-status-badge {
+	font-size: 0.9rem;
+	padding: 5px 10px;
+	border-radius: 20px;
+}
+
+.status-pending {
+	background-color: #fff3cd;
+	color: #856404;
+}
+
+.status-approved {
+	background-color: #d4edda;
+	color: #155724;
+}
+
+.status-rejected {
+	background-color: #f8d7da;
+	color: #721c24;
+}
+
+.status-cancelled {
+	background-color: #e2e3e5;
+	color: #383d41;
+}
+
+.action-buttons {
+	display: flex;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.no-leaves {
+	text-align: center;
+	padding: 40px;
+	color: #6c757d;
+}
+
+.no-leaves i {
+	font-size: 3rem;
+	margin-bottom: 15px;
+}
+
+.notification-badge {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	background-color: #dc3545;
+	color: white;
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+</style>
+</head>
+<body>
+	<div class="leave-requests-container">
+		<div
+			class="leave-header d-flex justify-content-between align-items-center">
+			<h2>
+				<i class="bi bi-inbox me-2"></i>Leave Requests
+			</h2>
+			<div class="position-relative">
+				<button class="btn btn-light" id="refreshBtn">
+					<i class="bi bi-arrow-clockwise"></i> Refresh
+				</button>
+				<span class="notification-badge d-none" id="pendingCountBadge"></span>
+			</div>
+		</div>
+
+		<div class="filter-controls">
+			<div class="row">
+				<div class="col-md-4">
+					<label for="statusFilter" class="form-label">Status</label> <select
+						class="form-select" id="statusFilter">
+						<option value="ALL">All Statuses</option>
+						<option value="PENDING">Pending</option>
+						<option value="APPROVED">Approved</option>
+						<option value="REJECTED">Rejected</option>
+						<option value="CANCELLED">Cancelled</option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label for="typeFilter" class="form-label">Leave Type</label> <select
+						class="form-select" id="typeFilter">
+						<option value="ALL">All Types</option>
+						<option value="SICK">Sick Leave</option>
+						<option value="VACATION">Vacation</option>
+						<option value="PERSONAL">Personal Leave</option>
+						<option value="MATERNITY">Maternity Leave</option>
+						<option value="PATERNITY">Paternity Leave</option>
+						<option value="BEREAVEMENT">Bereavement Leave</option>
+						<option value="OTHER">Other</option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label for="dateFilter" class="form-label">Date Range</label> <select
+						class="form-select" id="dateFilter">
+						<option value="ALL">All Dates</option>
+						<option value="TODAY">Today</option>
+						<option value="THIS_WEEK">This Week</option>
+						<option value="THIS_MONTH">This Month</option>
+						<option value="NEXT_MONTH">Next Month</option>
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<div id="leavesContainer">
+			<!-- Will be populated by JavaScript -->
+		</div>
+	</div>
+
+	<!-- Loading Indicator -->
+	<div id="loadingView" class="loading-overlay">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+	</div>
+
+	<!-- Message Modal -->
+	<div class="modal fade" id="messageModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="messageModalTitle"></h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body" id="messageModalBody"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Decision Modal -->
+	<div class="modal fade" id="decisionModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Process Leave Request</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" id="currentLeaveId">
+					<div class="mb-3">
+						<label for="decisionStatus" class="form-label">Decision</label> <select
+							class="form-select" id="decisionStatus">
+							<option value="APPROVED">Approve</option>
+							<option value="REJECTED">Reject</option>
+						</select>
+					</div>
+					<div class="mb-3">
+						<label for="decisionReason" class="form-label">Comments</label>
+						<textarea class="form-control" id="decisionReason" rows="3"></textarea>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary"
+						id="submitDecisionBtn">Submit</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script
+		src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+	<script>
+        const API_BASE_URL = 'http://10.100.124.64:8080/api';
+        let auth0Client;
+        let messageModal;
+        let decisionModal;
+        let allLeaves = [];
+        let pendingCount = 0;
+        let refreshInterval;
+        
+        const auth0Config = {
+            domain: "dev-mlvc4obj0xoj262o.us.auth0.com",
+            clientId: "msFAoItlh3wmSPTOfpTDkhFcwVuniIND",
+            audience: "https://api.employeemanagement.com",
+            redirectUri: window.location.origin + "/employee-management-frontend/index.html"
+        };
+        
+        async function initializeAuth0() {
+            try {
+                auth0Client = await window.auth0.createAuth0Client({
+                    domain: auth0Config.domain,
+                    clientId: auth0Config.clientId,
+                    authorizationParams: {
+                        audience: auth0Config.audience,
+                        redirect_uri: auth0Config.redirectUri,
+                        scope: 'openid profile email read:employees write:employees'
+                    }
+                });
+                
+                if (window.location.search.includes('code=')) {
+                    await auth0Client.handleRedirectCallback();
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                
+                const isAuthenticated = await auth0Client.isAuthenticated();
+                if (!isAuthenticated) {
+                    await auth0Client.loginWithRedirect();
+                    return false;
+                }
+                
+                // Check if user is admin
+                const user = await auth0Client.getUser();
+                const roles = user['https://api.employeemanagement.com/roles'] || [];
+                if (!roles.includes('admin')) {
+                    showMessage("Access denied. Only admins can view this page.", "error");
+                    setTimeout(() => window.location.href = 'dashboard.html', 2000);
+                    return false;
+                }
+                
+                return true;
+            } catch (err) {
+                console.error("Auth0 init error:", err);
+                showMessage("Authentication failed. Please try again later.", "error");
+                throw err;
+            }
+        }
+        
+        async function makeRequest(endpoint, method = 'GET', body = null) {
+            try {
+                const token = await auth0Client.getTokenSilently();
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                
+                const options = {
+                    method,
+                    headers
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (err) {
+                console.error("API Request Error:", err);
+                showMessage("API request failed: " + err.message, "error");
+                throw err;
+            }
+        }
+        
+        function showLoading(show) {
+            document.getElementById("loadingView").style.display = show ? 'flex' : 'none';
+        }
+        
+        function showMessage(message, type = 'info') {
+            const titleMap = {
+                'error': 'Error',
+                'success': 'Success',
+                'info': 'Information'
+            };
+            
+            document.getElementById('messageModalTitle').textContent = titleMap[type] || 'Message';
+            document.getElementById('messageModalBody').textContent = message;
+            
+            // Set appropriate color for header based on message type
+            const modalHeader = document.querySelector('#messageModal .modal-header');
+            modalHeader.className = 'modal-header';
+            
+            if (type === 'error') {
+                modalHeader.classList.add('bg-danger', 'text-white');
+            } else if (type === 'success') {
+                modalHeader.classList.add('bg-success', 'text-white');
+            } else {
+                modalHeader.classList.add('bg-primary', 'text-white');
+            }
+            
+            messageModal.show();
+        }
+        
+        function getStatusBadge(status) {
+            const statusMap = {
+                'PENDING': { class: 'status-pending', text: 'Pending' },
+                'APPROVED': { class: 'status-approved', text: 'Approved' },
+                'REJECTED': { class: 'status-rejected', text: 'Rejected' },
+                'CANCELLED': { class: 'status-cancelled', text: 'Cancelled' }
+            };
+            
+            const statusInfo = statusMap[status] || { class: '', text: status };
+            return `<span class="leave-status-badge ${statusInfo.class}">${statusInfo.text}</span>`;
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        
+        function updatePendingCount(count) {
+            pendingCount = count;
+            const badge = document.getElementById('pendingCountBadge');
+            badge.textContent = count;
+            
+            if (count > 0) {
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+        
+        async function loadPendingCount() {
+            try {
+                const count = await makeRequest('/leaves/pending/count');
+                updatePendingCount(count);
+            } catch (error) {
+                console.error("Error loading pending count:", error);
+            }
+        }
+        
+        function renderLeaves(leaves) {
+            const container = document.getElementById('leavesContainer');
+            
+            if (leaves.length === 0) {
+                container.innerHTML = `
+                    <div class="no-leaves">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No leave requests found</h4>
+                        <p>There are no leave requests matching your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = leaves.map(leave => `
+                <div class="leave-card">
+                    <div class="leave-card-header">
+                        <h5 class="mb-0">${leave.leaveType}</h5>
+                        ${getStatusBadge(leave.status)}
+                    </div>
+                    <div class="leave-card-body">
+                        <div class="employee-info">
+                            <img src="${API_BASE_URL}/employees/${leave.employeeId}/profile-photo" 
+                                 class="employee-photo" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 40 40\\'%3E%3Crect width=\\'40\\' height=\\'40\\' fill=\\'%23ddd\\'/%3E%3Ctext x=\\'50%\\' y=\\'50%\\' font-family=\\'Arial\\' font-size=\\'10\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\' fill=\\'%23666\\'%3E${leave.employeeName.charAt(0)}%3C/text%3E%3C/svg%3E'">
+                            <div>
+                                <strong>${leave.employeeName}</strong>
+                                <div class="text-muted small">Employee ID: ${leave.employeeId}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="leave-dates">
+                            <i class="bi bi-calendar-range me-1"></i>
+                            ${formatDate(leave.startDate)} to ${formatDate(leave.endDate)}
+                        </div>
+                        <div class="leave-reason">
+                            <strong>Reason:</strong> ${leave.reason}
+                        </div>
+                        <div class="text-muted small">
+                            Submitted on ${formatDate(leave.createdAt)}
+                            ${leave.updatedAt ? ` • Last updated on ${formatDate(leave.updatedAt)}` : ''}
+                        </div>
+                        
+                        ${leave.status === 'PENDING' ? `
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-success" onclick="openDecisionModal(${leave.leaveId}, 'APPROVE')">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="openDecisionModal(${leave.leaveId}, 'REJECT')">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let filteredLeaves = [...allLeaves];
+            
+            // Apply status filter
+            if (statusFilter !== 'ALL') {
+                filteredLeaves = filteredLeaves.filter(leave => leave.status === statusFilter);
+            }
+            
+            // Apply type filter
+            if (typeFilter !== 'ALL') {
+                filteredLeaves = filteredLeaves.filter(leave => leave.leaveType === typeFilter);
+            }
+            
+            // Apply date filter
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+            
+            if (dateFilter === 'TODAY') {
+                filteredLeaves = filteredLeaves.filter(leave => {
+                    const leaveDate = new Date(leave.startDate);
+                    return leaveDate.toDateString() === today.toDateString();
+                });
+            } else if (dateFilter === 'THIS_WEEK') {
+                filteredLeaves = filteredLeaves.filter(leave => {
+                    const leaveDate = new Date(leave.startDate);
+                    return leaveDate >= startOfWeek && leaveDate <= today;
+                });
+            } else if (dateFilter === 'THIS_MONTH') {
+                filteredLeaves = filteredLeaves.filter(leave => {
+                    const leaveDate = new Date(leave.startDate);
+                    return leaveDate >= startOfMonth && leaveDate <= today;
+                });
+            } else if (dateFilter === 'NEXT_MONTH') {
+                filteredLeaves = filteredLeaves.filter(leave => {
+                    const leaveDate = new Date(leave.startDate);
+                    return leaveDate >= startOfNextMonth && leaveDate <= endOfNextMonth;
+                });
+            }
+            
+            // Sort by created date (newest first)
+            filteredLeaves.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            renderLeaves(filteredLeaves);
+        }
+        
+        async function loadLeaves() {
+            try {
+                showLoading(true);
+                allLeaves = await makeRequest('/leaves/pending');
+                applyFilters();
+                await loadPendingCount();
+            } catch (error) {
+                console.error("Error loading leaves:", error);
+                showMessage("Failed to load leaves: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function openDecisionModal(leaveId, defaultDecision) {
+            document.getElementById('currentLeaveId').value = leaveId;
+            document.getElementById('decisionStatus').value = defaultDecision;
+            document.getElementById('decisionReason').value = '';
+            decisionModal.show();
+        }
+        
+        async function submitDecision() {
+            const leaveId = document.getElementById('currentLeaveId').value;
+            const status = document.getElementById('decisionStatus').value;
+            const reason = document.getElementById('decisionReason').value;
+            
+            if (!leaveId) return;
+            
+            try {
+                showLoading(true);
+                await makeRequest(`/leaves/${leaveId}/status?status=${status}${reason ? `&reason=${encodeURIComponent(reason)}` : ''}`, 'PUT');
+                showMessage("Leave request processed successfully", "success");
+                decisionModal.hide();
+                await loadLeaves();
+            } catch (error) {
+                console.error("Error processing leave:", error);
+                showMessage("Failed to process leave: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function initializePage() {
+            showLoading(true);
+            try {
+                const isAuthInitialized = await initializeAuth0();
+                if (!isAuthInitialized) return;
+                
+                messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+                decisionModal = new bootstrap.Modal(document.getElementById('decisionModal'));
+                
+                // Setup event listeners
+                document.getElementById('refreshBtn').addEventListener('click', loadLeaves);
+                document.getElementById('submitDecisionBtn').addEventListener('click', submitDecision);
+                
+                document.getElementById('statusFilter').addEventListener('change', applyFilters);
+                document.getElementById('typeFilter').addEventListener('change', applyFilters);
+                document.getElementById('dateFilter').addEventListener('change', applyFilters);
+                
+                // Load initial data
+                await loadLeaves();
+                
+                // Set up auto-refresh every 5 minutes
+                refreshInterval = setInterval(loadPendingCount, 5 * 60 * 1000);
+            } catch (error) {
+                console.error("Page initialization error:", error);
+                showMessage("Page initialization failed: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", initializePage);
+    </script>
+</body>
+</html>
