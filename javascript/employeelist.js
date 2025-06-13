@@ -185,7 +185,7 @@
             populateEmployeeTable(sortedEmployees);
         }
 
-        function populateEmployeeTable(employees) {
+       function populateEmployeeTable(employees) {
             const tableBody = document.getElementById('employeeTableBody');
             if (!employees || employees.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No employees found</td></tr>`;
@@ -215,24 +215,37 @@
                         <td>${emp.email || 'N/A'}</td>
                         <td>${emp.mobile || 'N/A'}</td>
                         <td>${emp.dob ? new Date(emp.dob).toLocaleDateString() : 'N/A'}</td>
-                        <td class="action-buttons">
-                            ${isAdmin ? `<a href="employee-form.html?id=${emp.employeeId}" class="btn btn-sm btn-outline-warning me-2" title="Edit">
-                                <i class="bi bi-pencil"></i>
-                            </a>` : ''}
-                            ${isAdmin ? `<button onclick="deleteEmployee(${emp.employeeId})" class="btn btn-sm btn-outline-danger me-2" title="Delete">
-                                <i class="bi bi-trash"></i>
-                            </button>` : ''}
-                            ${(isAdmin || isOwnRecord) ? `<button onclick="downloadEmployeePdf(${emp.employeeId})" class="btn btn-sm btn-outline-info" title="Download PDF">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </button>` : '<button class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-file-earmark-pdf"></i></button>'}
-                        </td>
+						<!-- In the action-buttons section of employee-list.html, add these buttons -->
+						<td class="action-buttons">
+						    ${isAdmin ? `<a href="employee-form.html?id=${emp.employeeId}" class="btn btn-sm btn-outline-warning me-2" title="Edit">
+						        <i class="bi bi-pencil"></i>
+						    </a>` : ''}
+						    ${isAdmin ? `<button onclick="deleteEmployee(${emp.employeeId})" class="btn btn-sm btn-outline-danger me-2" title="Delete">
+						        <i class="bi bi-trash"></i>
+						    </button>` : ''}
+						    ${(isAdmin || isOwnRecord) ? `
+						    <button onclick="downloadEmployeePdf(${emp.employeeId})" class="btn btn-sm btn-outline-info me-2" title="Download PDF">
+						        <i class="bi bi-file-earmark-pdf"></i>
+						    </button>
+						    <button onclick="location.href='apply-leave.html?employeeId=${emp.employeeId}'" class="btn btn-sm btn-outline-primary me-2" title="Apply Leave">
+						        <i class="bi bi-calendar-plus"></i>
+						    </button>
+						    <button onclick="location.href='my-leaves.html?employeeId=${emp.employeeId}'" class="btn btn-sm btn-outline-secondary" title="View Leaves">
+						        <i class="bi bi-calendar-check"></i>
+						    </button>
+						    ` : `
+						    <button class="btn btn-sm btn-outline-secondary me-2" disabled><i class="bi bi-file-earmark-pdf"></i></button>
+						    <button class="btn btn-sm btn-outline-secondary me-2" disabled><i class="bi bi-calendar-plus"></i></button>
+						    <button class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-calendar-check"></i></button>
+						    `}
+						</td>
                     </tr>
                 `;
             }).join('');
 
             // Load photos after table is populated
             loadProfilePhotos(employees);
-        }
+        }}
 
         async function loadProfilePhotos(employees) {
             try {
